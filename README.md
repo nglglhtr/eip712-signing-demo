@@ -1,10 +1,16 @@
 # EIP712 Signing Demo
 
-This is a demonstration of EIP712 signing support via MetaMask's
-`eth_signTypedData_v3` API call. It includes copy-and-paste
-Solidity code that performs EIP712 hashing and `ecrecover`y on-chain.
+## dependencies
+- http-server `npm install -g http-server`
+- browserify `npm install -g browserify`
+- ethereumjs-util `npm install --save ethereumjs-util`
+- Buffer `npm install --save buffer`
 
-[Try it here](https://weijiekoh.github.io/eip712-signing-demo/index.html).
+## usage
+in root, run 
+```
+$ http-server
+```
 
-Please use MetaMask [version 4.14.0](https://github.com/MetaMask/metamask-extension/releases/)
-and above as earlier versions do not necessarily support `eth_signTypedData_v3`.
+## problem
+ideally, the signature generated (which is currently logged in browser console) should differ for changing message struct params in the EIP712 typed data, or changing orderId - for some reason, i keep getting the same signature
