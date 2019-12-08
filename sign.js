@@ -1,3 +1,6 @@
+var Buffer = require('buffer/').Buffer 
+var ethUtils = require('ethereumjs-util')
+
 function parseSignature(signature) {
   var r = signature.substring(0, 64);
   var s = signature.substring(64, 128);
@@ -10,19 +13,7 @@ function parseSignature(signature) {
   }
 }
 
-function genSolidityVerifier(signature, signer, chainId) {
-	  
-  return solidityCode
-    .replace("<CHAINID>", chainId)
-    .replace("<SIGR>", signature.r)
-    .replace("<SIGS>", signature.s)
-    .replace("<SIGV>", signature.v)
-    .replace("<SIGNER>", signer);
-}
-
-window.onload = function (e) {
-  var res = document.getElementById("response");
-  res.style.display = "none";
+window.addEventListener('load', function() {
 
   // force the user to unlock their MetaMask
   if (web3.eth.accounts[0] == null) {
@@ -36,55 +27,62 @@ window.onload = function (e) {
     if (web3.eth.accounts[0] == null) {
       return;
     }
-
     const domain = [
       { name: "name", type: "string" },
       { name: "version", type: "string" },
       { name: "chainId", type: "uint256" },
-      { name: "verifyingContract", type: "address" },
-      { name: "salt", type: "bytes32" },
+      { name: "contract", type: "address" }
     ];
-
-    const bid = [
-      { name: "amount", type: "uint256" },
-      { name: "bidder", type: "Identity" },
-    ];
-
-    const identity = [
-      { name: "userId", type: "uint256" },
-      { name: "wallet", type: "address" },
+    const tokenTransferOrder = [
+      { name: "spender", type: "address" },
+      { name: "tokenIdOrAmount", type: "uint256" },
+      { name: "data", type: "bytes32" },
+      { name: "expiration", type: "uint256" }
     ];
 
     const chainId = parseInt(web3.version.network, 10);
-  
+
+    const token1 = '0xC52BD2A7fefDdb48E39e45DC4A003A03c15A2315'
+    const amount1 = 1
+    const token2 = '0x8d7E5E349DDB3dB4c24B80849809602932C8EE00'
+    const amount2 = 2
+    const orderId = '0x561fc8c006383053139846222b6b0aebc1182ba073b2455938a86e9753bfb478'
+    const spender = '0x6dDBb4f17e59bb552240274fdC58de8802A4Fa71'
+
+    const orderData = Buffer.concat([
+      ethUtils.toBuffer(orderId),
+      ethUtils.toBuffer(token2),
+      ethUtils.setLengthLeft(amount2, 32)
+    ]);
+    const orderDataHash = ethUtils.keccak256(orderData);
+    console.log (orderDataHash); 
+
+    const expiration = 0;
     const domainData = {
-      name: "My amazing dApp",
-      version: "2",
+      name: "Matic Network",
+      version: "1",
       chainId: chainId,
-      verifyingContract: "0x1C56346CD2A2Bf3202F771f50d3D14a367B48070",
-      salt: "0xf2d857f4a3edcb9b78b4d503bfe733db1e3f6cdc2b7971ee739626c97e86a558"
+      verifyingContract: token1
     };
 
     var message = {
-      amount: 100,
-      bidder: {
-        userId: 323,
-        wallet: "0x3333333333333333333333333333333333333333"
-      }
+      spender,
+      amount1,
+      orderDataHash,
+      expiration
     };
     
     const data = JSON.stringify({
       types: {
         EIP712Domain: domain,
-        Bid: bid,
-        Identity: identity,
+        TokenTransferOrder: tokenTransferOrder
       },
       domain: domainData,
-      primaryType: "Bid",
+      primaryType: "TokenTransferOrder",
       message: message
     });
 
-    const signer = web3.toChecksumAddress(web3.eth.accounts[0]);
+    const signer = web3.eth.accounts[0];
 
     web3.currentProvider.sendAsync(
       {
@@ -96,12 +94,10 @@ window.onload = function (e) {
         if (err || result.error) {
           return console.error(result);
         }
-
         const signature = parseSignature(result.result.substring(2));
-
-        res.style.display = "block";
-        res.value = genSolidityVerifier(signature, signer, chainId);
+        console.log(result.result.substring(2))
+        console.log(signature)
       }
     );
   };
-}
+})
