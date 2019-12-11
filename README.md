@@ -6,6 +6,7 @@
 - ethereumjs-util `npm install --save ethereumjs-util`
 - Buffer `npm install --save buffer`
 
+(forgot to add package.json, sorry :neutral_face:)
 ## usage
 in root, run 
 ```
@@ -13,7 +14,7 @@ $ http-server
 ```
 
 ## problem
-ideally, the signature generated (which is currently logged in browser console) should differ for changing message struct params in the EIP712 typed data, or changing orderId - for some reason, i keep getting the same signature
+ideally, the signature generated (which is currently logged in browser console) should differ for changing message struct params in the EIP712 typed data, or changing orderId - for some reason, i keep getting the same signature :woman_facepalming:
 
 ## other details
 the params are hardcoded, [here](/sign.js#L45)
