@@ -6,6 +6,7 @@
 - ethereumjs-util `npm install --save ethereumjs-util`
 - Buffer `npm install --save buffer`
 
+(forgot to add package.json, sorry :neutral_face:)
 ## usage
 in root, run 
 ```
