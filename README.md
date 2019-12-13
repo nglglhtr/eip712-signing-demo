@@ -12,6 +12,10 @@ in root, run
 ```
 $ http-server
 ```
+any changes to `sign.js` require browserifying
+```
+$ browserify sign.js > index.js
+```
 
 ## other details
 the params are hardcoded, [here](/sign.js#L45)
