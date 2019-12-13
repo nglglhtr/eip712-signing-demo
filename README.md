@@ -14,7 +14,7 @@ $ http-server
 ```
 any changes to `sign.js` require browserifying
 ```
-$ browserify sign.js > index.js
+$ browserify sign.js > bundle.js
 ```
 
 ## other details
