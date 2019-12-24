@@ -1,26 +1,24 @@
 # EIP712 Signing Demo
 
-## dependencies
+## Dependencies
 - http-server `npm install -g http-server`
 - browserify `npm install -g browserify`
-- ethereumjs-util `npm install --save ethereumjs-util`
-- Buffer `npm install --save buffer`
 
-(forgot to add package.json, sorry :neutral_face:)
-## usage
-in root, run 
-```
-$ http-server
-```
-any changes to `sign.js` require browserifying
+## Compile
+> __Note__: Remember to recompile after making changes to sign.js
 ```
 $ browserify sign.js > bundle.js
 ```
 
-## other details
+## Run
+```
+$ http-server
+```
+
+## Other details
 the params are hardcoded, [here](/sign.js#L45)
 
-### addresses
+### Addresses
 | . | address |
 |---|---|
 |network (rpc)|`https://testnetv3.matic.network`|
