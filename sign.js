@@ -62,33 +62,32 @@ console.log("result from lib", sig);
 window.addEventListener('load', function() {
 
   // force the user to unlock their MetaMask
-  if (web3.eth.accounts[0] == null) {
+  if (window.web3.eth.accounts[0] == null) {
     alert("Please unlock MetaMask first");
     // Trigger login request with MetaMask
-    web3.currentProvider.enable().catch(alert)
+    window.web3.currentProvider.enable().catch(alert)
   }
 
   var signBtn = document.getElementById("signBtn");
   signBtn.onclick = function(e) {
-    if (web3.eth.accounts[0] == null) {
+    if (window.web3.eth.accounts[0] == null) {
       return;
     }
-  const chainId = parseInt(web3.version.network, 10);
+    const chainId = parseInt(window.web3.version.network, 10);
 
-  const signer = web3.eth.accounts[0];
-
-  web3.currentProvider.sendAsync(
-    {
-      method: "eth_signTypedData_v3",
-      params: [signer, JSON.stringify(typedDataObject)],
-      from: signer
-    }, 
-    function(err, result) {
-      if (err || result.error) {
-        return console.error(result);
+    const signer = window.web3.eth.accounts[0];
+    window.web3.currentProvider.sendAsync(
+      {
+        method: "eth_signTypedData_v3",
+        params: [signer, JSON.stringify(typedDataObject)],
+        from: signer
+      }, 
+      function(err, result) {
+        if (err || result.error) {
+          return console.error(result);
+        }
+        console.log("result from metamask: ", result.result)
       }
-      console.log("result from metamask: ")
-      console.log(result.result)
-    }
-  );};
+    );
+  };
 })
