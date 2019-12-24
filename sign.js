@@ -26,15 +26,14 @@ const orderData = Buffer.concat([
   ethUtils.toBuffer(token2),
   ethUtils.setLengthLeft(amount2, 32)
 ]);
-const orderDataHash1 = ethUtils.keccak256(orderData);
-const orderDataHash = '0x' + orderDataHash1.toString('hex');
+const orderDataHash = ethUtils.bufferToHex(ethUtils.keccak256(orderData));
 
 const expiration = 0;
 const domainData = {
-  name: "Matic Netwoork",
+  name: "Matic Network",
   version: "1",
   chainId: 15001,
-  verifyingContract: token1
+  contract: token1
 };
 
 var message = {
