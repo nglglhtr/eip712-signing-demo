@@ -38,7 +38,7 @@ const domainData = {
 
 var message = {
   spender: spender,
-  tokenIdOrAmount: amount1,
+  tokenIdOrAmount: amount1+"",  // convert to string so numbers larger that 53 bits are handled correctly
   data: orderDataHash,
   expiration: expiration
 };
