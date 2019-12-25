@@ -51,12 +51,15 @@ const typedDataObject = {
   primaryType: "TokenTransferOrder",
   message: message
 }
+try {
+  const sig = sigUtils.signTypedData(ethUtils.toBuffer(privateKey), {
+    data: typedDataObject
+  })
+  console.log("result from lib", sig);
+} catch (e) {
+  console.error(e);
+}
 
-const sig = sigUtils.signTypedData(ethUtils.toBuffer(privateKey), {
-  data: typedDataObject
-})
-
-console.log("result from lib", sig);
 
 window.addEventListener('load', function() {
 
@@ -75,18 +78,22 @@ window.addEventListener('load', function() {
     const chainId = parseInt(window.web3.version.network, 10);
 
     const signer = window.web3.eth.accounts[0];
-    window.web3.currentProvider.sendAsync(
-      {
-        method: "eth_signTypedData_v3",
-        params: [signer, JSON.stringify(typedDataObject)],
-        from: signer
-      }, 
-      function(err, result) {
-        if (err || result.error) {
-          return console.error(result);
+    try {
+      window.web3.currentProvider.sendAsync(
+        {
+          method: "eth_signTypedData_v3",
+          params: [signer, JSON.stringify(typedDataObject)],
+          from: signer
+        }, 
+        function(err, result) {
+          if (err || result.error) {
+            return console.error(result);
+          }
+          console.log("result from metamask: ", result.result)
         }
-        console.log("result from metamask: ", result.result)
-      }
-    );
+      );
+    } catch (e) {
+      console.error(e);
+    }
   };
 })
