@@ -4,13 +4,15 @@
   "description": "## dependencies - http-server `npm install -g http-server` - browserify `npm install -g browserify` - ethereumjs-util `npm install --save ethereumjs-util` - Buffer `npm install --save buffer`",
   "main": "bundle.js",
   "dependencies": {
-    "buffer": "^5.4.3",
+    "@biconomy/mexa": "^1.5.13",
+    "browserify": "^16.5.2",
     "eth-sig-util": "^2.5.2",
-    "ethereumjs-util": "^6.2.0"
+    "http-server": "^0.12.3"
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "compile": "browserify sign.js > bundle.js",
+    "serve": "http-server"
   },
   "repository": {
     "type": "git",

@@ -1,99 +1,180 @@
-var Buffer = require('buffer/').Buffer 
-var ethUtils = require('ethereumjs-util')
-var sigUtils = require('eth-sig-util')
-const domain = [
-  { name: "name", type: "string" },
-  { name: "version", type: "string" },
-  { name: "chainId", type: "uint256" },
-  { name: "contract", type: "address" }
-];
-const tokenTransferOrder = [
-  { name: "spender", type: "address" },
-  { name: "tokenIdOrAmount", type: "uint256" },
-  { name: "data", type: "bytes32" },
-  { name: "expiration", type: "uint256" }
-];
-const token1 = '0xC52BD2A7fefDdb48E39e45DC4A003A03c15A2315'
-const amount1 = 1
-const token2 = '0x8d7E5E349DDB3dB4c24B80849809602932C8EE00'
-const amount2 = 2
-const orderId = '0x565fc8c006383053139846222b6b0aebc1182ba073b2455938a86e9753bfb478'
-const spender = '0x6dDBb4f17e59bb552240274fdC58de8802A4Fa71'
-const privateKey = '0x7A6B65B8B79D3C650DE2B32BCEA4B245F7CCF3DD687D48EE738F66BF774F6C31'
+const Web3 = require("web3");
+const { getTypedData } = require("./meta-tx")
+const request = require('request')
+const maticProvider = "https://rpc-mumbai.matic.today";
 
-const orderData = Buffer.concat([
-  ethUtils.toBuffer(orderId),
-  ethUtils.toBuffer(token2),
-  ethUtils.setLengthLeft(amount2, 32)
-]);
-const orderDataHash = ethUtils.bufferToHex(ethUtils.keccak256(orderData));
-
-const expiration = 0;
-const domainData = {
-  name: "Matic Network",
-  version: "1",
-  chainId: 15001,
-  contract: token1
-};
-
-var message = {
-  spender: spender,
-  tokenIdOrAmount: amount1+"",  // convert to string so numbers larger that 53 bits are handled correctly
-  data: orderDataHash,
-  expiration: expiration
-};
-const typedDataObject = {
-  types: {
-    EIP712Domain: domain,
-    TokenTransferOrder: tokenTransferOrder
-  },
-  domain: domainData,
-  primaryType: "TokenTransferOrder",
-  message: message
+const tokenAddresses = {
+  "80001": "0x2395d740789d8C27C139C62d1aF786c77c9a1Ef1"
 }
-try {
-  const sig = sigUtils.signTypedData(ethUtils.toBuffer(privateKey), {
-    data: typedDataObject
+
+let mumbai = new Web3('https://rpc-mumbai.matic.today/'), eth, accounts, chain
+
+async function fillMaticDetails () {
+  let _data = await mumbai.eth.abi.encodeFunctionCall({
+    name: 'balanceOf',
+    type: 'function',
+    inputs: [{
+        type: 'address',
+        name: 'address'
+    }]
+  }, [accounts[0]]);
+
+  let balanceMumbai = await mumbai.eth.call ({
+    to: tokenAddresses["80001"],
+    data: _data
+  });
+
+  document.getElementById("mum-token").innerHTML = tokenAddresses["80001"]
+  document.getElementById("mum-balance").innerHTML = parseInt(balanceMumbai)
+}
+
+window.addEventListener('load', async () => {
+  if (typeof window.ethereum !== 'undefined') {
+    console.log('MetaMask is installed!')
+    accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
+    document.getElementById("account").innerHTML = accounts[0]
+    chainArea = document.getElementById("chain")
+    chain = await window.ethereum.chainId
+    chain = parseInt(chain)
+    chainArea.innerHTML = chain
+    
+    eth = window.ethereum
+    await fillMaticDetails ()
+  }
+})
+
+
+async function executeMetaTx(functionSig) {
+  let data = await mumbai.eth.abi.encodeFunctionCall({
+    name: 'getNonce', 
+    type: 'function', 
+    inputs: [{
+        "name": "user",
+        "type": "address"
+      }]
+  }, [accounts[0]])
+  let _nonce = await mumbai.eth.call ({
+    to: tokenAddresses["80001"],
+    data
+  });
+  const dataToSign = getTypedData({
+    name: 'prueba',
+    version: '1',
+    salt: '0x0000000000000000000000000000000000000000000000000000000000013881',
+    verifyingContract: tokenAddresses["80001"],
+    nonce: parseInt(_nonce),
+    from: accounts[0],
+    functionSignature: functionSig
   })
-  console.log("result from lib", sig);
-} catch (e) {
-  console.error(e);
+  const msgParams = [accounts[0], JSON.stringify(dataToSign)]
+  let sign = await eth.request ({
+    method: 'eth_signTypedData_v3', 
+    params: msgParams
+  })
+  const { r, s, v } = getSignatureParameters(sign)
+  return {
+    sig: sign,
+    r,
+    s, 
+    v, 
+  }
 }
+const amt = "10"
+document.getElementById('approveBtn').onclick = async () => {
+  let data = await mumbai.eth.abi.encodeFunctionCall({
+    name: 'approve', 
+    type: 'function', 
+    inputs: [
+      {
+        "name": "spender",
+        "type": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256"
+      }
+    ]
+  }, [accounts[0], amt])
 
+  let { sig, r, s, v } = await executeMetaTx (data)
+  document.getElementById('approve-tx').innerHTML = 
 
-window.addEventListener('load', function() {
+  `sig:`+sig + `<br />` + `<br />`
+  +`function sig:`+data
 
-  // force the user to unlock their MetaMask
-  if (window.web3.eth.accounts[0] == null) {
-    alert("Please unlock MetaMask first");
-    // Trigger login request with MetaMask
-    window.web3.currentProvider.enable().catch(alert)
+  let tx = {
+    intent: sig, 
+    fnSig: data, 
+    from: accounts[0], 
+    contractAddress: tokenAddresses["80001"]
   }
 
-  var signBtn = document.getElementById("signBtn");
-  signBtn.onclick = function(e) {
-    if (window.web3.eth.accounts[0] == null) {
-      return;
-    }
-    const chainId = parseInt(window.web3.version.network, 10);
+  await executeAndDisplay (
+    tx, 
+    'result-approve'
+  )
 
-    const signer = window.web3.eth.accounts[0];
-    try {
-      window.web3.currentProvider.sendAsync(
-        {
-          method: "eth_signTypedData_v3",
-          params: [signer, JSON.stringify(typedDataObject)],
-          from: signer
-        }, 
-        function(err, result) {
-          if (err || result.error) {
-            return console.error(result);
-          }
-          console.log("result from metamask: ", result.result)
-        }
-      );
-    } catch (e) {
-      console.error(e);
+}
+
+document.getElementById('withdrawBtn').onclick = async () => {
+  let data = await mumbai.eth.abi.encodeFunctionCall({
+    name: 'withdraw', 
+    type: 'function', 
+    inputs: [{
+        "name": "amount",
+        "type": "uint256"
+    }]
+  }, [amt])
+
+  let { sig, r, s, v } = await executeMetaTx (data)
+  document.getElementById('withdraw-tx').innerHTML = 
+
+  `sig:`+sig + `<br />` + `<br />`
+  +`function sig:`+data
+
+  let tx = {
+    intent: sig, 
+    fnSig: data, 
+    from: accounts[0], 
+    contractAddress: tokenAddresses["80001"]
+  }
+
+  await executeAndDisplay (
+    tx, 
+    'result-withdraw'
+  )
+}
+
+async function executeAndDisplay(txObj, el) {
+  const response = await request.post(
+    'http://localhost:3000/exec', {
+      json: txObj,
+    },
+    (error, res, body) => {
+      if (error) {
+        console.error(error)
+        return
+      }
+      document.getElementById(el).innerHTML = 
+      `response:`+ JSON.stringify(body)
     }
+  )
+}
+
+const getSignatureParameters = (signature) => {
+  if (!mumbai.utils.isHexStrict(signature)) {
+    throw new Error(
+      'Given value "'.concat(signature, '" is not a valid hex string.')
+    );
+  }
+  var r = signature.slice(0, 66);
+  var s = "0x".concat(signature.slice(66, 130));
+  var v = "0x".concat(signature.slice(130, 132));
+  v = mumbai.utils.hexToNumber(v);
+  if (![27, 28].includes(v)) v += 27;
+  return {
+    r: r,
+    s: s,
+    v: v,
   };
-})
+};
