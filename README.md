@@ -1,5 +1,6 @@
 # Network Agnostic Transactions Demo
 
+based on MetaTx standard by Biconomy: https://github.com/bcnmy/metatx-standard
 
 ## Demo
 
