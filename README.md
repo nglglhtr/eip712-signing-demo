@@ -1,7 +1,7 @@
 # Network Agnostic Transactions Demo
 
 - based on MetaTx standard by Biconomy: https://github.com/bcnmy/metatx-standard
-- a walkthrough for the concept was presented in ETHOnline here: https://youtu.be/5tKzMcflOcY?t=1590
+- a walkthrough for the concept was presented in ETHOnline here: https://youtu.be/5tKzMcflOcY?t=1590 (the repo used there is a more simpler version: https://github.com/nglglhtr/ETHOnline-Workshop/tree/master/2-network-agnostic-transfer)
 
 ## Demo
 
